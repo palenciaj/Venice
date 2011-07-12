@@ -59,6 +59,17 @@ int vertOffset;
         quetsiSpeed = 200;
         enemies = [[NSMutableArray alloc] init];
         
+        //init t,b,c,d ivars
+        t = 0;
+        b = 0;
+        c = 0;
+        d = .2;
+        
+        //init lastTouch ivar
+        firstTouch.x = 0;
+        firstTouch.y = 0;
+        fingerDown = false;
+        
         // Initialize Box2D World
         b2Vec2 gravity = b2Vec2(0.0f, 0.0f);
         bool doSleep = false;
@@ -254,6 +265,9 @@ int vertOffset;
     // update distance traveled
     distanceTraveled +=  gameSpeed * dt;
     
+    //update quetsi position
+    [self updateQuetsiPosition:dt];
+    
     // Update our Box2D world
     world->Step(dt, 10, 10);
     for(b2Body *body = world->GetBodyList(); body; body=body->GetNext()) {
@@ -395,6 +409,8 @@ int vertOffset;
 	[[CCTouchDispatcher sharedDispatcher] addTargetedDelegate:self priority:0 swallowsTouches:YES];
 }
 
+/*
+
 //initi touch handling function
 - (BOOL)ccTouchBegan:(UITouch *)touch withEvent:(UIEvent *)event {
     //if same column, don't do anything
@@ -409,6 +425,10 @@ int vertOffset;
     
     touchPosition.x = [self convertTouchToNodeSpace:touch].x;
     touchPosition.y = 420;
+    
+    //update touch variables
+
+    
     //quetsiLocation.x = [self convertTouchToColumn:touch];
     //quetsiLocation.y = 420;
     
@@ -432,11 +452,35 @@ int vertOffset;
     return YES;
 }
 
+ */
+ 
+- (BOOL)ccTouchBegan:(UITouch *)touch withEvent:(UIEvent *)event {
+    //save quetsi position prior to touch
+    dustBatchNode.position = quetsiLocation;
+    dustBatchNode.position.y -= 6;
+    
+    touchPosition.x = [self convertTouchToNodeSpace:touch].x;
+    touchPosition.y = 420;
+    
+    firstTouch.x = touchPosition.x;
+    firstTouch.y = 420;
+    
+    quetsiFirstTouch.x = quetsiBatchNode.position.x;
+    quetsiFirstTouch.y = 420;
+
+    
+    fingerDown = true;
+    
+    return YES;
+}
+
 // call back function for dust anim sequence
 
 - (void) removeDust {
     [dustBatchNode setVisible:false];
 }
+
+/*
 
 - (void)ccTouchMoved:(UITouch *)touch withEvent:(UIEvent *)event {
 
@@ -469,6 +513,20 @@ int vertOffset;
     [dust runAction:actionSequence];
     //[quetsiBatchNode runAction: easeout];
 }
+ 
+ */
+
+- (void)ccTouchMoved:(UITouch *)touch withEvent:(UIEvent *)event {
+    
+    touchPosition.x = [self convertTouchToNodeSpace:touch].x;
+    touchPosition.y = 420;
+    
+    
+    
+
+}
+
+/*
 
 //end touch handling function
 - (void)ccTouchEnded:(UITouch *)touch withEvent:(UIEvent *)event {
@@ -481,8 +539,65 @@ int vertOffset;
     
     //[quetsiBatchNode runAction: easeout];
     
+    fingerDown = false;
+    
     //[self unscheduleUpdate];
     [self unschedule:@selector(moveToFinger:)];
+}
+
+ */
+
+- (void)ccTouchEnded:(UITouch *)touch withEvent:(UIEvent *)event {
+    
+    touchPosition.x = [self convertTouchToNodeSpace:touch].x;
+    
+    
+    fingerDown = false;
+    t = 0;
+    c = -1 * v;
+    b = v;
+    
+}
+
+- (void) updateQuetsiPosition:(ccTime) dt {
+    
+    if (firstTouch.x == touchPosition.x)
+        return;
+        
+    
+    CGFloat dx = touchPosition.x - firstTouch.x;
+    
+    if (fingerDown) {
+        
+        CGFloat newXpos = quetsiFirstTouch.x + dx;
+        
+        v = (newXpos - quetsiBatchNode.position.x) / dt;
+        
+        quetsiBatchNode.position = ccp(newXpos, 420);
+        
+        return;
+        
+    } else {
+        
+        if (v != 0) {
+            
+            t += dt;
+            
+            v = [self easeOutExpo];
+            
+            quetsiBatchNode.position = ccp(quetsiBatchNode.position.x + v * dt, 420);
+            
+            NSLog(@"Velocity: %f", v);
+            
+        }
+        
+        return;
+    }
+    
+}
+
+- (CGFloat) easeOutExpo {
+    return (t==d) ? b+c : c * (-pow(2, -10 * t/d) + 1) + b;
 }
 
 

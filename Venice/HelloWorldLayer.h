@@ -13,6 +13,7 @@
 #import "Box2D.h"
 #import "MyContactListener.h"
 #import "SimpleAudioEngine.h"
+#import <math.h>
 
 #define PTM_RATIO 32
 
@@ -29,16 +30,24 @@ typedef enum {
 {
     NSMutableArray *enemies;
     CGPoint quetsiLocation; // location of quetsi on game
+    CGFloat v;
     int gameSpeed;          // Scrolling speed multiplier of game
     int enemySpeed;         // Scrolling speed multiplier of enemies
     int distanceTraveled;   // distance quetsi has traveled in points
     int quetsiSpeed;        // Speed quetsi moves left/right
     
     // variables used for ease functions
-    int t;
-    int b;
-    int c;
-    int d;
+    CGFloat t;
+    CGFloat b;
+    CGFloat c;
+    CGFloat d;
+    
+    //variables used for touch controls
+    CGPoint touchPosition;
+    CGPoint firstTouch;
+    CGPoint quetsiFirstTouch;
+    int fingerVelocity;
+    bool fingerDown;
     
     // Box2D ivars
     b2World* world;
@@ -46,7 +55,6 @@ typedef enum {
     MyContactListener *_contactListener;
     
     //Finger Position variables
-    CGPoint touchPosition;
 }
 
 - (void)addBoxBodyForSprite:(CCSprite *)sprite;
@@ -57,6 +65,8 @@ typedef enum {
 - (void) spawnRandomFoodCreature;
 - (void) secondUpdate:(ccTime)dt;
 - (void) moveToFinger:(ccTime)dt;
+- (void) updateQuetsiPosition:(ccTime)dt;
+- (CGFloat) easeOutExpo;
 
 // returns a CCScene that contains the HelloWorldLayer as the only child
 +(CCScene *) scene;
